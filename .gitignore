@@ -1,0 +1,15 @@
+frida-*.tar.xz
+frida-gum-example.c
+frida-gum.h
+libfrida-gum.a
+
+target_fork
+target_persistent
+fork_instr
+persistent_instr
+
+testcase_dir
+findings_dir
+
+notes.txt
+.vscode

@@ -1,0 +1,3 @@
+[submodule "AFL"]
+	path = AFL
+	url = https://github.com/google/AFL.git
