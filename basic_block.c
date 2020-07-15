@@ -21,11 +21,13 @@ void instr_basic_block(GumStalkerIterator* iterator, GumStalkerOutput* output, g
     while (gum_stalker_iterator_next(iterator, &instr)) {
         if (begin) {
             guint64 current_pc = instr->address - range->base_address;
+            if (range->code_start <= current_pc && range->code_end >= current_pc) {
 #ifdef BASIC_BLOCK_TRACE
-            printf("Transforming BB @ 0x%llx\n", current_pc);
+              printf("Transforming BB @ 0x%llx\n", current_pc);
 #endif
-            gum_stalker_iterator_put_callout(iterator, on_basic_block, (gpointer) current_pc, NULL);
-            begin = FALSE;
+              gum_stalker_iterator_put_callout(iterator, on_basic_block, (gpointer) current_pc, NULL);
+              begin = FALSE;
+            }
         }
 
         gum_stalker_iterator_keep(iterator);

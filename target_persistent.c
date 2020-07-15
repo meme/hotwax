@@ -42,18 +42,21 @@ int main(int argc, char* argv[]) {
 
     GumEventSink* event_sink = gum_fake_event_sink_new();
 
+    static volatile char* branding __attribute__ ((used)) = (char*) "##SIG_AFL_PERSISTENT##";
+    char data[1024];
+    ssize_t len;
+
     afl_setup();
     afl_start_forkserver();
     
     gum_stalker_follow_me(stalker, transformer, event_sink);
 
-    static volatile char* branding __attribute__ ((used)) = (char*) "##SIG_AFL_PERSISTENT##";
-    char data[1024];
-
-    while (__afl_persistent_loop(1000) != 0) {
-        memset(data, 0, sizeof(data));
-        read(STDIN_FILENO, data, sizeof(data));
-        box(data);
+    while (__afl_persistent_loop(1000000) != 0) {
+        len = read(STDIN_FILENO, data, sizeof(data) - 1);
+        if (len > 0) {
+          data[len] = 0;
+          box(data);
+        }
     }
 
     gum_stalker_unfollow_me(stalker);

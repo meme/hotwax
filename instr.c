@@ -27,7 +27,7 @@
 
 uint8_t  __afl_area_initial[MAP_SIZE];
 uint8_t* afl_area_ptr = __afl_area_initial;
-__thread uint32_t __afl_prev_loc;
+__thread uint64_t __afl_prev_loc;
 unsigned int afl_instr_rms = MAP_SIZE;
 
 int is_persistent = 0;
