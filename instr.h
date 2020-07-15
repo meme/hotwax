@@ -34,14 +34,13 @@ __attribute__ ((always_inline))
 static inline void afl_maybe_log(guint64 current_pc) {
     extern unsigned int afl_instr_rms;
     extern uint8_t* afl_area_ptr;
-
-    static __thread guint64 previous_pc;
+    extern __thread uint64_t __afl_prev_loc;
 
     current_pc = (current_pc >> 4) ^ (current_pc << 8);
     current_pc &= MAP_SIZE - 1;
 
     if (current_pc >= afl_instr_rms) return;
 
-    afl_area_ptr[current_pc ^ previous_pc]++;
-    previous_pc = current_pc >> 1;
+    afl_area_ptr[current_pc ^ __afl_prev_loc]++;
+    __afl_prev_loc = current_pc >> 1;
 }
