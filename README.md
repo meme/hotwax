@@ -13,11 +13,80 @@ However, in our closed-box example, we do not have the ability to AOT instrument
 
 ## How can I use it?
 
-You need the `frida-gum-devkit`, which can be found here: https://github.com/frida/frida/releases (make sure you pick the correct OS and architecture)
+To get a list of build targets, run `make`:
+```
+Build all of the components for the given platform
+    linux-x86
+    linux-x86_64
+    macos-x86_64
+    android-x86_64
 
-You'll also need to have AFL built, enter `AFL` and `make` in the root as well as in `llvm_mode` (this is used for the baseline benchmark).
+Delete all built artefacts
+    clean
 
-Next, run `./build.sh` (proper build system is a TODO) and `mkdir -p testcase_dir && echo "AAA" > testcase_dir/sample.txt && ./fuzz.sh ./target_persistent` as a sanity check. To fuzz custom software, replace the code in `target_X.c` and add test case(s) as appropriate. External libraries will be automatically instrumented (you can prevent this by adding exclusion calls in the respective target).
+Build the AFL examples for comparison
+    afl
+
+Build the FRIDA GUM devkit
+    devkit-linux-x86
+    devkit-linux-x86_64
+    devkit-macos-x86_64
+    devkit-android-x86_64
+
+Build stalker AFL fork mode example
+    target-fork-linux-x86
+    target-fork-linux-x86_64
+    target-fork-macos-x86_64
+    target-fork-android-x86_64
+
+Build stalker AFL persistent mode example
+    target-persistent-linux-x86
+    target-persistent-linux-x86_64
+    target-persistent-macos-x86_64
+    target-persistent-android-x86_64
+
+Build afl-clang stalker fork mode example
+    fork-instr
+
+Build afl-clang persistent mode example
+    persistent-instr
+
+Run stalker AFL fork mode example
+    run-target-fork-linux-x86
+    run-target-fork-linux-x86_64
+    run-target-fork-macos-x86_64
+    run-target-fork-android-x86_64
+
+Run stalker AFL persistent mode example
+    run-target-persistent-linux-x86
+    run-target-persistent-linux-x86_64
+    run-target-persistent-macos-x86_64
+    run-target-persistent-android-x86_64
+
+Run afl-clang stalker fork mode example
+    run-fork-instr
+
+Run afl-clang persistent mode example
+    run-persistent-instr
+```
+
+The build of hotwax is dependent on the operating system and architecture on which it is built, the following platforms are supported:
+* linux x86
+* linux x86_64
+* macos x86_64
+* android x86_64
+
+The make file will take care of downloading and building the appropriate FRIDA GUM devkit and AFL.
+
+For example, in order to compare `afl-clang` instrumentation to that of `hotwax`'s stalker instrumentation in AFL's fork mode run:
+* `make run-fork-instr`
+* `make run-target-fork-linux-x86_64`
+
+To perform the same comparison in AFL's persistent mode run:
+* `make run-persistent-instr`
+* `make run-target-persistent-linux-x86_64`
+
+To fuzz custom software, replace the code in `target_X.c` and add test case(s) as appropriate. External libraries will be automatically instrumented (you can prevent this by adding exclusion calls in the respective target).
 
 ---
 
