@@ -21,27 +21,10 @@ INCLUDES:= -I$(PWD)inc/ -I$(DEV_KIT_DIR)
 CFLAGS:= -g -Wall -Werror -Wno-unused-function $(INCLUDES)
 LDFLAGS:= -lpthread -ldl -lresolv
 
-ifeq ($(OS),linux)
-	ifeq ($(ARCH),x86)
-		PLAT_CFLAGS:= -m32
-	endif
-	ifeq ($(ARCH),x86_64)
-		PLAT_CFLAGS:=
-	endif
-endif
-ifeq ($(OS),macos)
-	ifeq ($(ARCH),x86)
-$(error Unsupported platform combination)
-	endif
-	ifeq ($(ARCH),x86_64)
-	endif
-endif
-ifeq ($(OS),android)
-	ifeq ($(ARCH),x86)
-	endif
-	ifeq ($(ARCH),x86_64)
-	endif
-endif
+SUPPORTED_linux_x86:=1
+SUPPORTED_linux_x86_64:=1
+SUPPORTED_macos_x86_64:=1
+SUPPORTED_android_x86_64:=1
 
 SRC_DIR:=$(PWD)src/
 BASELINE_DIR:=$(SRC_DIR)baseline/
@@ -64,53 +47,125 @@ EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 JOIN = $(subst $(SPACE),$1,$(strip $2))
 
-# name, dependency
+TARGET_COLOUR = "\033[32m";
+RESET_COLOUR = "\033[0m"
+
+# Platform support
+ifneq ($(and $(ARCH),$(OS)),)
+ ifeq ($(SUPPORTED_$(OS)_$(ARCH)),)
+$(error Unsupported platform combination $(OS)-$(ARCH))
+ endif
+endif
+
+ifeq ($(OS),linux)
+	ifeq ($(ARCH),x86)
+		PLAT_CFLAGS:= -m32
+	endif
+	ifeq ($(ARCH),x86_64)
+		PLAT_CFLAGS:=
+	endif
+endif
+ifeq ($(OS),macos)
+	ifeq ($(ARCH),x86_64)
+	endif
+endif
+ifeq ($(OS),android)
+	ifeq ($(ARCH),x86_64)
+	endif
+endif
+
+# Macros
+
+# args: name, dependency
 define os_arch_target
 $(foreach arch,$(CANDIDATE_ARCH),$(eval $(call build_arch,$(arch),$(1),$(2))))
 endef
 
-# arch, name, dependency
+# args: arch, name, dependency
 define build_arch
 $(foreach os,$(CANDIDATE_OS),$(eval $(call build_os,$(os),$(1),$(2),$(3))))
 endef
 
-# os, arch, name, dependency
+# args: os, arch, name, dependency
 define build_os
 $(3)$(1)-$(2):
 	OS=$(1) ARCH=$(2) make $(4)
 endef
 
-TARGET_COLOUR = "\033[32m";
-VARIABLE_COLOUR = "\033[36m"
-RESET_COLOUR = "\033[0m"
+# args: name, notes
+define show
+.show-hdr-$(1):
+	@printf "$(2)"
+	@printf "\n"
 
-#name
-define os_arch_show
-$(foreach arch,$(CANDIDATE_ARCH),$(eval $(call show_arch,$(arch),$(1))))
-.show-$(1):
-	@echo Component $(1)
+	@printf $(TARGET_COLOUR)
+	@printf "\t"
+	@printf "$(1)"
+	@printf $(RESET_COLOUR)
+	@printf "\n"
 
-SHOW+=$$(SHOW-$(1))
+.show-footer-$(1): .show-hdr-$(1)
+	@printf "\n"
+
+SHOW+=.show-footer-$(1)
 endef
 
-# arch, name
+# args: name, notes
+define os_arch_show
+$(foreach arch,$(CANDIDATE_ARCH),$(eval $(call show_arch,$(arch),$(1))))
+.os-arch-show-hdr-$(1):
+	@printf  "$(2)"
+	@printf "\n"
+
+.os-arch-show-footer-$(1): $$(SHOW-$(1))
+	@printf "\n"
+
+SHOW+=.os-arch-show-footer-$(1)
+endef
+
+# args: arch, name
 define show_arch
 $(foreach os,$(CANDIDATE_OS),$(eval $(call show_os,$(os),$(1),$(2))))
 endef
 
-# os, arch, name
+# args: os, arch, name
 define show_os
-.show-$(3)$(1)-$(2): .show-$(3)
-	@echo \\t$(3)$(1)-$(2);
+.os-arch-show-$(3)$(1)-$(2): .os-arch-show-hdr-$(3)
+ifneq ($(SUPPORTED_$(1)_$(2)),)
+	@printf $(TARGET_COLOUR)
+	@printf "\t"
+ ifeq ($(3),)
+	@printf "$(1)-$(2)"
+ else
+	@printf "$(3)-$(1)-$(2)"
+ endif
+	@printf $(RESET_COLOUR)
+	@printf "\n"
+endif
 
-SHOW-$(3)+=.show-$(3)$(1)-$(2)
+SHOW-$(3)+=.os-arch-show-$(3)$(1)-$(2)
 endef
 
-$(eval $(call os_arch_show,devkit))
+# Build help system
+
+$(eval $(call os_arch_show,,Build all of the components for the given platform))
+$(eval $(call show,clean,Delete all built artefacts))
+$(eval $(call show,afl,Build the AFL examples for comparison))
+$(eval $(call os_arch_show,devkit,Build the FRIDA GUM devkit))
+
+$(eval $(call os_arch_show,target-fork,Build stalker AFL fork mode example))
+$(eval $(call os_arch_show,target-persistent,Build stalker AFL persistent mode example))
+$(eval $(call show,fork-instr,Build afl-clang stalker fork mode example))
+$(eval $(call show,persistent-instr,Build afl-clang persistent mode example))
+
+$(eval $(call os_arch_show,run-target-fork,Run stalker AFL fork mode example))
+$(eval $(call os_arch_show,run-target-persistent,Run stalker AFL persistent mode example))
+$(eval $(call show,run-fork-instr,Run afl-clang stalker fork mode example))
+$(eval $(call show,run-persistent-instr,Run afl-clang persistent mode example))
+
+# targets
 
 default: $(SHOW)
-	@echo "default"
-
 
 $(eval $(call os_arch_target,,.targets))
 
@@ -188,9 +243,9 @@ $(TARGET_PERSISTENT): $(SRC_FILES) \
 		$(LIB_FRIDA_GUM) \
 		$(LDFLAGS)
 
-.target_persistent: $(TARGET_PERSISTENT)
+.target-persistent: $(TARGET_PERSISTENT)
 
-$(eval $(call os_arch_target,target-persistent-,.target_persistent))
+$(eval $(call os_arch_target,target-persistent-,.target-persistent))
 
 ## FORK_INSTR
 
@@ -201,6 +256,8 @@ $(FORK_INSTR): $(AFL_CLANG_FAST) \
 		$(BASELINE_DIR)fork_instr.c \
 		$(TARGET_DIR)target.c
 
+fork-instr: $(FORK_INSTR)
+
 # PERSISTENT_INSTR
 
 $(PERSISTENT_INSTR): $(AFL_CLANG_FAST) \
@@ -209,6 +266,8 @@ $(PERSISTENT_INSTR): $(AFL_CLANG_FAST) \
 		-o $@ \
 		$(BASELINE_DIR)persistent_instr.c \
 		$(TARGET_DIR)target.c
+
+persistent-inst: $(PERSISTENT_INSTR)
 
 .targets: $(TARGETS)
 
@@ -231,13 +290,11 @@ $(SAMPLE_TXT): | $(TEST_CASE_DIR)
 .run-target-persistent: $(TARGET_PERSISTENT) $(SAMPLE_TXT) $(FINDINGS_DIR)
 	$(AFL_FUZZ) $(AFL_FLAGS) -i $(TEST_CASE_DIR) -o $(FINDINGS_DIR) $<
 
-.run-fork-instr: $(FORK_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
+run-fork-instr: $(FORK_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
 	$(AFL_FUZZ) $(AFL_FLAGS) -i $(TEST_CASE_DIR) -o $(FINDINGS_DIR) $<
 
-.run-persistent-instr: $(PERSISTENT_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
+run-persistent-instr: $(PERSISTENT_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
 	$(AFL_FUZZ) $(AFL_FLAGS) -i $(TEST_CASE_DIR) -o $(FINDINGS_DIR) $<
 
 $(eval $(call os_arch_target,run-target-fork-,.run-target-fork))
 $(eval $(call os_arch_target,run-target-persistent-,.run-target-persistent))
-$(eval $(call os_arch_target,run-fork-instr-,.run-fork-instr))
-$(eval $(call os_arch_target,run-persistent-instr-,.run-persistent-instr))
