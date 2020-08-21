@@ -76,12 +76,41 @@ endef
 
 # os, arch, name, dependency
 define build_os
-$(1)-$(2)$(3):
+$(3)$(1)-$(2):
 	OS=$(1) ARCH=$(2) make $(4)
 endef
 
-default:
+TARGET_COLOUR = "\033[32m";
+VARIABLE_COLOUR = "\033[36m"
+RESET_COLOUR = "\033[0m"
+
+#name
+define os_arch_show
+$(foreach arch,$(CANDIDATE_ARCH),$(eval $(call show_arch,$(arch),$(1))))
+.show-$(1):
+	@echo Component $(1)
+
+SHOW+=$$(SHOW-$(1))
+endef
+
+# arch, name
+define show_arch
+$(foreach os,$(CANDIDATE_OS),$(eval $(call show_os,$(os),$(1),$(2))))
+endef
+
+# os, arch, name
+define show_os
+.show-$(3)$(1)-$(2): .show-$(3)
+	@echo \\t$(3)$(1)-$(2);
+
+SHOW-$(3)+=.show-$(3)$(1)-$(2)
+endef
+
+$(eval $(call os_arch_show,devkit))
+
+default: $(SHOW)
 	@echo "default"
+
 
 $(eval $(call os_arch_target,,.targets))
 
@@ -110,28 +139,26 @@ afl: $(AFL_CLANG_FAST)
 
 ## DEVKIT
 ifeq ($(and $(ARCH),$(OS)),)
-check:
+.check:
 	@echo "OS must be selected ($(call JOIN,/,$(CANDIDATE_OS))) - selected = [$(OS)]";
 	@echo "ARCH must be selected ($(call JOIN,/,$(CANDIDATE_ARCH))) - selected = [$(ARCH)]";
 	@false;
 else
-check:
+.check:
 endif
 
-$(DEV_KIT): | check $(DEV_KIT_DIR)
-	$(CHECK_ALL)
+$(DEV_KIT): | .check $(DEV_KIT_DIR)
 	wget -O $(DEV_KIT) $(DEV_KIT_URL)
 
 $(DEV_KIT_DIR): |$(OUT_DIR)
 	mkdir -p $@
 
-$(LIB_FRIDA_GUM): | check $(DEV_KIT) $(DEV_KIT_DIR)
-	$(CHECK_ALL)
+$(LIB_FRIDA_GUM): | .check $(DEV_KIT) $(DEV_KIT_DIR)
 	tar Jxf $(DEV_KIT) -C $(DEV_KIT_DIR)
 
 .devkit: $(LIB_FRIDA_GUM)
 
-$(eval $(call os_arch_target,-devkit,.devkit))
+$(eval $(call os_arch_target,devkit-,.devkit))
 
 ## TARGET_FORK
 
@@ -147,7 +174,7 @@ $(TARGET_FORK): $(SRC_FILES) \
 
 .target-fork: $(TARGET_FORK)
 
-$(eval $(call os_arch_target,-target_fork,.target-fork))
+$(eval $(call os_arch_target,target-fork-,.target-fork))
 
 ## TARGET_PERSISTENT
 
@@ -163,7 +190,7 @@ $(TARGET_PERSISTENT): $(SRC_FILES) \
 
 .target_persistent: $(TARGET_PERSISTENT)
 
-$(eval $(call os_arch_target,-target_persistent,.target_persistent))
+$(eval $(call os_arch_target,target-persistent-,.target_persistent))
 
 ## FORK_INSTR
 
@@ -198,19 +225,19 @@ $(SAMPLE_TXT): | $(TEST_CASE_DIR)
 
 ## RUN
 
-.run_target_fork: $(TARGET_FORK) $(SAMPLE_TXT) $(FINDINGS_DIR)
+.run-target-fork: $(TARGET_FORK) $(SAMPLE_TXT) $(FINDINGS_DIR)
 	$(AFL_FUZZ) $(AFL_FLAGS) -i $(TEST_CASE_DIR) -o $(FINDINGS_DIR) $<
 
-.run_target_persistent: $(TARGET_PERSISTENT) $(SAMPLE_TXT) $(FINDINGS_DIR)
+.run-target-persistent: $(TARGET_PERSISTENT) $(SAMPLE_TXT) $(FINDINGS_DIR)
 	$(AFL_FUZZ) $(AFL_FLAGS) -i $(TEST_CASE_DIR) -o $(FINDINGS_DIR) $<
 
-.run_fork_instr: $(FORK_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
+.run-fork-instr: $(FORK_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
 	$(AFL_FUZZ) $(AFL_FLAGS) -i $(TEST_CASE_DIR) -o $(FINDINGS_DIR) $<
 
-.run_persistent_instr: $(PERSISTENT_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
+.run-persistent-instr: $(PERSISTENT_INSTR) $(SAMPLE_TXT) $(FINDINGS_DIR)
 	$(AFL_FUZZ) $(AFL_FLAGS) -i $(TEST_CASE_DIR) -o $(FINDINGS_DIR) $<
 
-$(eval $(call os_arch_target,-run_target_fork,.run_target_fork))
-$(eval $(call os_arch_target,-run_target_persistent,.run_target_persistent))
-$(eval $(call os_arch_target,-run_fork_instr,.run_fork_instr))
-$(eval $(call os_arch_target,-run_persistent_instr,.run_persistent_instr))
+$(eval $(call os_arch_target,run-target-fork-,.run-target-fork))
+$(eval $(call os_arch_target,run-target-persistent-,.run-target-persistent))
+$(eval $(call os_arch_target,run-fork-instr-,.run-fork-instr))
+$(eval $(call os_arch_target,run-persistent-instr-,.run-persistent-instr))
