@@ -17,7 +17,7 @@ DEV_KIT:=$(OUT_DIR)$(DEV_KIT_FILENAME)
 DEV_KIT_DIR:=$(OUT_DIR)devkit/
 LIB_FRIDA_GUM:=$(DEV_KIT_DIR)libfrida-gum.a
 
-INCLUDES:= -I$(PWD)inc/ -I$(DEV_KIT_DIR)
+INCLUDES:= -I$(PWD)include/ -I$(DEV_KIT_DIR)
 CFLAGS:= -g -Wall -Werror -Wno-unused-function $(INCLUDES)
 LDFLAGS:= -lpthread -ldl -lresolv
 
