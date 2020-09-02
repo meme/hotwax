@@ -7,7 +7,7 @@ AFL_CLANG_FAST:=$(AFL_DIR)afl-clang-fast
 AFL_FUZZ:=$(AFL_DIR)afl-fuzz
 AFL_FLAGS:=-m 128
 
-VERSION:=12.11.10
+VERSION:=12.11.12
 DEV_KIT_FILENAME:=frida-gum-devkit-$(VERSION)-$(OS)-$(ARCH).tar.xz
 DEV_KIT_URL:=https://github.com/frida/frida/releases/download/$(VERSION)/$(DEV_KIT_FILENAME)
 BIN_DIR:=$(PWD)bin/
