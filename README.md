@@ -1,4 +1,4 @@
-hotwax
+hotwax [![Bors enabled](https://bors.tech/images/badge_small.svg)](https://app.bors.tech/repositories/27272)
 ======
 
 Coverage-guided binary fuzzing powered by Frida Stalker
