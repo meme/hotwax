@@ -17,7 +17,7 @@
   limitations under the License.
 */
 
-#include "frida-gum.h"
+#include <frida-gum.h>
 
 #define FORKSRV_FD 198
 #define SHM_ENV_VAR "__AFL_SHM_ID"
