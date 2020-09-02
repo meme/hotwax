@@ -1,6 +1,5 @@
 #include "frida-gum.h"
 
-#include "event_sink.h"
 #include "instr.h"
 #include "basic_block.h"
 
@@ -40,8 +39,6 @@ int main(int argc, char* argv[]) {
     GumStalkerTransformer* transformer = gum_stalker_transformer_make_from_callback(
         instr_basic_block, &instr_range, NULL);
 
-    GumEventSink* event_sink = gum_fake_event_sink_new();
-
     static volatile char* branding __attribute__ ((used)) = (char*) "##SIG_AFL_PERSISTENT##";
     char data[1024];
     ssize_t len;
@@ -49,7 +46,7 @@ int main(int argc, char* argv[]) {
     afl_setup();
     afl_start_forkserver();
     
-    gum_stalker_follow_me(stalker, transformer, event_sink);
+    gum_stalker_follow_me(stalker, transformer, NULL);
 
     while (__afl_persistent_loop(1000000) != 0) {
         len = read(STDIN_FILENO, data, sizeof(data) - 1);
@@ -67,7 +64,6 @@ int main(int argc, char* argv[]) {
 
     g_object_unref(stalker);
     g_object_unref(transformer);
-    g_object_unref(event_sink);
     gum_deinit_embedded();
     return 0;
 }
