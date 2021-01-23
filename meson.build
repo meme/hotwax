@@ -5,7 +5,6 @@ source_dir = meson.current_source_dir()
 host_os = host_machine.system()
 
 resolv_dep = cc.find_library('resolv')
-sqlite3_dep = cc.find_library('sqlite3')
 threads_dep = dependency('threads')
 
 gum_dep = cc.find_library('frida-gum',
@@ -33,7 +32,7 @@ hotwax_lib = static_library('hotwax',
 
 hotwax_dep = declare_dependency(
     link_with: [hotwax_lib],
-    dependencies: [threads_dep, sqlite3_dep, gum_dep],
+    dependencies: [threads_dep, gum_dep],
 )
 
 subdir('targets')
