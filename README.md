@@ -22,7 +22,7 @@ To build `hotwax`, you need `meson`. Consult your package manager or the meson d
 To begin fuzzing the example targets, create the `testcase_dir` and place a seed in it: `mkdir -p testcase_dir && echo "AAA" > testcase_dir/sample.txt`. Then, use your AFL built to begin fuzzing the appropriate target, e.g.:
 
 ```
-$ afl-fuzz -m 128 -i testcase_dir -o findings_dir ./build/target/target_persistent
+$ ./AFL/afl-fuzz -m 128 -i testcase_dir -o findings_dir ./build/targets/target_persistent
 ```
 
 To fuzz custom software, replace the code in `target_X.c` and add test case(s) as appropriate. External libraries will be automatically instrumented (you can prevent this by adding exclusion calls in the respective target).
@@ -32,8 +32,8 @@ To build the baseline, which is now deprecated:
 1) Enter `AFL/llvm_mode` and run `make`
 2) Build the baseline targets:
     ```
-    $ ./AFL/afl-clang target.c baseline/fork_instr.c -o baseline/fork_instr
-    $ ./AFL/afl-clang-fast target.c baseline/persistent_instr.c -o baseline/persistent_instr
+    $ ./AFL/afl-clang targets/target.c baseline/fork_instr.c -o baseline/fork_instr
+    $ ./AFL/afl-clang-fast targets/target.c baseline/persistent_instr.c -o baseline/persistent_instr
     ```
 
 ---
