@@ -1,6 +1,6 @@
 /*
   Copyright 2013 Google LLC All rights reserved.
-  Copyright 2020 Keegan S. <keegan@sdf.org>
+  Copyright 2020 Keegan Saunders <keegan@undefinedbehaviour.org>
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
