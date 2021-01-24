@@ -30,12 +30,12 @@ void afl_setup(void);
 void afl_start_forkserver(void);
 int __afl_persistent_loop(unsigned int max_cnt);
 
+extern unsigned int afl_instr_rms;
+extern uint8_t* afl_area_ptr;
+extern __thread uint64_t __afl_prev_loc;
+
 __attribute__ ((always_inline))
 static inline void afl_maybe_log(guint64 current_pc) {
-    extern unsigned int afl_instr_rms;
-    extern uint8_t* afl_area_ptr;
-    extern __thread uint64_t __afl_prev_loc;
-
     current_pc = (current_pc >> 4) ^ (current_pc << 8);
     current_pc &= MAP_SIZE - 1;
 
