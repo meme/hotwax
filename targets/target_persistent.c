@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
     guint64 code_end = (code_range.base_address + code_range.size) - base_address;
 
     range_t instr_range = {
-        base_address, code_start, code_end
+        base_address, code_start, code_end, 0, 0
     };
 
     GumStalkerTransformer* transformer = gum_stalker_transformer_make_from_callback(
