@@ -21,17 +21,6 @@ static int enumerate_ranges(const GumRangeDetails* details, gpointer user_data) 
     return 0;
 }
 
-static void prefetch_log(const GumEvent* event, GumCpuContext* cpu_context, gpointer user_data) {
-    switch (event->type) {
-    case GUM_COMPILE: {
-        const GumCompileEvent* compile = &event->compile;
-        if (prefetch_compiled != NULL) {
-            g_hash_table_add(prefetch_compiled, compile->begin);
-        }
-    } break;
-    }
-}
-
 static void prefetch_write(int fd, GHashTable *table) {
     GHashTableIter iter;
     gpointer key, value;
@@ -56,7 +45,7 @@ static void prefetch_activation() {
 
 int main(int argc, char* argv[]) {
     is_persistent = 1;
-    
+
     gum_init_embedded();
     if (!gum_stalker_is_supported()) {
       gum_deinit_embedded();
@@ -85,9 +74,7 @@ int main(int argc, char* argv[]) {
     //
     GumStalkerTransformer* transformer = gum_stalker_transformer_make_from_callback(
         instr_basic_block, &instr_range, NULL);
-    GumEventSink* event_sink = gum_event_sink_make_from_callback(GUM_COMPILE | GUM_BLOCK,
-        prefetch_log, NULL, NULL);
-    gum_stalker_follow_me(stalker, transformer, event_sink);
+    gum_stalker_follow_me(stalker, transformer, NULL);
     gum_stalker_deactivate(stalker);
 
     static volatile char* branding __attribute__ ((used)) = (char*) "##SIG_AFL_PERSISTENT##";
@@ -125,16 +112,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    gum_stalker_unfollow_me(stalker);
+    gum_stalker_deactivate(stalker);
 
     prefetch_write(compile_pipes[STDOUT_FILENO], prefetch_compiled);
 
-    while (gum_stalker_garbage_collect(stalker)) {
-        g_usleep(10000);
-    }
-
-    g_object_unref(stalker);
-    g_object_unref(transformer);
-    gum_deinit_embedded();
-    return 0;
+    raise (SIGKILL);
 }
