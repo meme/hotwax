@@ -68,6 +68,8 @@ static void on_basic_block(GumCpuContext* context, gpointer user_data) {
 
 GHashTable* prefetch_compiled;
 
+void prefetch_write (void * addr);
+
 void instr_basic_block(GumStalkerIterator* iterator, GumStalkerOutput* output, gpointer user_data) {
     range_t* range = (range_t*) user_data;
 
@@ -77,10 +79,10 @@ void instr_basic_block(GumStalkerIterator* iterator, GumStalkerOutput* output, g
         if (begin) {
             guint64 current_pc = instr->address - range->base_address;
             if (range->code_start <= current_pc && range->code_end >= current_pc) {
-                if (prefetch_compiled != NULL)
-                {
-                    g_hash_table_add(prefetch_compiled, (void *)current_pc);
-                }
+#ifdef BASIC_BLOCK_TRACE
+              g_print ("instr->address: 0x%016lx\n", instr->address);
+#endif
+              prefetch_write ((void *)instr->address);
 #ifdef BASIC_BLOCK_TRACE
               printf("Transforming BB @ 0x%llx\n", current_pc);
 #endif

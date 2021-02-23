@@ -21,6 +21,13 @@ if host_os == 'linux'
     gum_dependencies += [dl_dep]
 endif
 
+if host_os == 'linux'
+    lzma_dep = cc.find_library('lzma',
+        static: true
+    )
+    gum_dependencies += [lzma_dep]
+endif
+
 gum_dep = declare_dependency(
     dependencies: gum_dependencies,
     include_directories: '.',

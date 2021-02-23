@@ -32,6 +32,8 @@ unsigned int afl_instr_rms = MAP_SIZE;
 
 int is_persistent = 0;
 
+extern void prefetch_read (void);
+
 void afl_start_forkserver(void) {
   static uint8_t tmp[4];
   int32_t child_pid;
@@ -65,6 +67,8 @@ void afl_start_forkserver(void) {
 
       /* Once woken up, create a clone of our process. */
 
+      prefetch_read ();
+
       child_pid = fork();
       if (child_pid < 0) _exit(1);
 
@@ -75,7 +79,7 @@ void afl_start_forkserver(void) {
         close(FORKSRV_FD);
         close(FORKSRV_FD + 1);
         return;
-  
+
       }
 
     } else {
