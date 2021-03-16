@@ -1,6 +1,6 @@
 /*
   Copyright 2013 Google LLC All rights reserved.
-  Copyright 2020 Keegan S. <keegan@sdf.org>
+  Copyright 2020 Keegan Saunders <keegan@undefinedbehaviour.org>
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ __thread uint64_t __afl_prev_loc;
 unsigned int afl_instr_rms = MAP_SIZE;
 
 int is_persistent = 0;
+
+extern void prefetch_read (void);
 
 void afl_start_forkserver(void) {
   static uint8_t tmp[4];
@@ -65,6 +67,8 @@ void afl_start_forkserver(void) {
 
       /* Once woken up, create a clone of our process. */
 
+      prefetch_read ();
+
       child_pid = fork();
       if (child_pid < 0) _exit(1);
 
@@ -75,7 +79,7 @@ void afl_start_forkserver(void) {
         close(FORKSRV_FD);
         close(FORKSRV_FD + 1);
         return;
-  
+
       }
 
     } else {
