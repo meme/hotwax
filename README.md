@@ -1,6 +1,8 @@
 hotwax
 ======
 
+**This repo is not longer maintained. See [LibAFL](https://github.com/AFLplusplus/LibAFL)**
+
 Coverage-guided binary fuzzing powered by Frida Stalker
 
 A good introduction to the concept of coverage-guided fuzzing can be found on the [AFL repo](https://github.com/google/AFL#1-challenges-of-guided-fuzzing). Details on the Frida Stalker can be found [here](https://frida.re/docs/stalker/) (note that these examples are in JavaScript whereas this uses the C API which has little documentation.)
